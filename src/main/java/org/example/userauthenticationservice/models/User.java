@@ -18,6 +18,30 @@ public class User extends BaseModel {
 
     @ManyToMany
     private List<Role> roles=new ArrayList<>();
+
+//    public void setEmail(String email) {
+//        this.email = email;
+//    }
+//
+//    public void setPassword(String password) {
+//        this.password = password;
+//    }
+//
+//    public void setRoles(List<Role> roles) {
+//        this.roles = roles;
+//    }
+//
+//    public String getEmail() {
+//        return email;
+//    }
+//
+//    public String getPassword() {
+//        return password;
+//    }
+//
+//    public List<Role> getRoles() {
+//        return roles;
+//    }
 }
 
 
