@@ -1,5 +1,6 @@
 package org.example.userauthenticationservice.controllers;
 
+import org.antlr.v4.runtime.misc.Pair;
 import org.example.userauthenticationservice.dtos.LoginRequestDto;
 import org.example.userauthenticationservice.dtos.SignupRequestDto;
 import org.example.userauthenticationservice.dtos.UserDto;
@@ -7,6 +8,9 @@ import org.example.userauthenticationservice.exceptions.UserAlreadyExistExceptio
 import org.example.userauthenticationservice.models.User;
 import org.example.userauthenticationservice.services.IAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,9 +35,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public UserDto login(@RequestBody LoginRequestDto loginRequestDto) {
-        User user = authService.login(loginRequestDto.getEmail(),loginRequestDto.getPassword());
-        return from(user);
+    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto) {
+        Pair<User, MultiValueMap<String,String>> response = authService.login(loginRequestDto.getEmail(),loginRequestDto.getPassword());
+        UserDto user = from(response.a);
+        return new ResponseEntity<>(user,response.b, HttpStatusCode.valueOf(200));
 
     }
 

@@ -1,14 +1,20 @@
 package org.example.userauthenticationservice.services;
 
+import io.jsonwebtoken.Jwts;
+import org.antlr.v4.runtime.misc.Pair;
 import org.example.userauthenticationservice.exceptions.IncorrectPasswordException;
 import org.example.userauthenticationservice.exceptions.UserAlreadyExistException;
 import org.example.userauthenticationservice.exceptions.UserDoesnotExistException;
 import org.example.userauthenticationservice.models.User;
 import org.example.userauthenticationservice.repos.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Service
@@ -36,7 +42,7 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public User login(String email, String password) {
+    public Pair<User,MultiValueMap<String,String>> login(String email, String password) {
         Optional<User>  optionalUser = userRepo.findByEmail(email);
         if(optionalUser.isEmpty()) {
             throw new UserDoesnotExistException("Please signup first");
@@ -47,7 +53,25 @@ public class AuthService implements IAuthService {
            throw new IncorrectPasswordException("Password didn't match");
         }
 
-        return optionalUser.get();
+                String message = "{\n" +
+                "   \"email\": \"anurag@gmail.com\",\n" +
+                "   \"roles\": [\n" +
+                "      \"instructor\",\n" +
+                "      \"ta\"\n" +
+                "   ],\n" +
+                "   \"expirationDate\": \"2ndApril2025\"\n" +
+                "}";
+
+                byte[] content = message.getBytes(StandardCharsets.UTF_8);
+                String token = Jwts.builder().content(content).compact();
+
+        MultiValueMap<String,String> headers = new LinkedMultiValueMap<>();
+        headers.add(HttpHeaders.SET_COOKIE,token);
+
+        Pair<User,MultiValueMap<String,String>> response = new Pair<>(optionalUser.get(), headers);
+        return response;
+
+        //return optionalUser.get();
 
     }
 }
