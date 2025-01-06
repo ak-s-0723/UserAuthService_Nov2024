@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.misc.Pair;
 import org.example.userauthenticationservice.dtos.LoginRequestDto;
 import org.example.userauthenticationservice.dtos.SignupRequestDto;
 import org.example.userauthenticationservice.dtos.UserDto;
+import org.example.userauthenticationservice.dtos.ValidateTokenRequest;
 import org.example.userauthenticationservice.exceptions.UserAlreadyExistException;
 import org.example.userauthenticationservice.models.User;
 import org.example.userauthenticationservice.services.IAuthService;
@@ -40,6 +41,12 @@ public class AuthController {
         UserDto user = from(response.a);
         return new ResponseEntity<>(user,response.b, HttpStatusCode.valueOf(200));
 
+    }
+
+
+    @PostMapping("/validateToken")
+    public Boolean validateToken(@RequestBody ValidateTokenRequest validateTokenRequest) {
+        return authService.validateToken(validateTokenRequest.getUserId(), validateTokenRequest.getToken());
     }
 
     public UserDto from(User user) {

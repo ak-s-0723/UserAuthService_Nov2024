@@ -1,5 +1,7 @@
 package org.example.userauthenticationservice.services;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.MacAlgorithm;
 import org.antlr.v4.runtime.misc.Pair;
@@ -21,6 +23,7 @@ import org.springframework.util.MultiValueMap;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,6 +36,8 @@ public class AuthService implements IAuthService {
     @Autowired
     private SessionRepo sessionRepo;
 
+    @Autowired
+    private SecretKey secretKey;
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -85,8 +90,8 @@ public class AuthService implements IAuthService {
 
 
 
-        MacAlgorithm algorithm = Jwts.SIG.HS256;
-        SecretKey secretKey = algorithm.key().build();
+//        MacAlgorithm algorithm = Jwts.SIG.HS256;
+//        SecretKey secretKey = algorithm.key().build();
         String token = Jwts.builder().claims(userClaims).signWith(secretKey).compact();
 
         MultiValueMap<String,String> headers = new LinkedMultiValueMap<>();
@@ -105,6 +110,32 @@ public class AuthService implements IAuthService {
 
         //return optionalUser.get();
 
+    }
+
+    public Boolean validateToken(Long userId, String token) {
+        Optional<UserSession> optionalUserSession = sessionRepo.findByTokenAndUser_Id(token,userId);
+
+        if(optionalUserSession.isEmpty()) return false;
+
+        UserSession userSession = optionalUserSession.get();
+
+        String persistedToken = userSession.getToken();
+
+        JwtParser jwtParser = Jwts.parser().verifyWith(secretKey).build();
+        Claims claims = jwtParser.parseSignedClaims(persistedToken).getPayload();
+        Long expiryStoredInToken = (Long)claims.get("exp");
+        Long currentTime =System.currentTimeMillis();
+
+        System.out.println(expiryStoredInToken);
+        System.out.println(currentTime);
+
+        if(currentTime > expiryStoredInToken) {
+            userSession.setStatus(Status.INACTIVE);
+            sessionRepo.save(userSession);
+            return false;
+        }
+
+        return true;
     }
 }
 
